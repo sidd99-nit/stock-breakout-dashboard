@@ -47,7 +47,7 @@ def fetch_stock_data(watchlist):
                 "Live Price": round(current_price, 2),
                 "Daily Change": f"{price_change:+.2f} ({pct_change:+.2f}%)",
                 "20-Day Low Target": round(lowest_low_20d, 2),
-                "Breakout Status": "🚀 BREAKDOWN" if crossed_low else "🔒 ABOVE FLOOR",
+                "Breakdown Status": "🚀 BREAKDOWN" if crossed_low else "🔒 ABOVE FLOOR",
                 "Distance to Low %": round(pct_to_low, 2)
             })
         except Exception as e:
@@ -67,9 +67,9 @@ with st.spinner("Fetching live market data..."):
     df = fetch_stock_data(WATCHLIST)
 
 if not df.empty:
-    # Highlight rows that have broken past their 20-day high ceiling
+    # Highlight rows that have broken below their 20-day low floor
     def highlight_breakouts(row):
-        return ['background-color: #2e7d32; color: white' if row['Breakout Status'] == "🚀 BREAKOUT" else '' for _ in row]
+        return ['background-color: #2e7d32; color: white' if row['Breakdown Status'] == "🚀 BREAKDOWN" else '' for _ in row]
     
     styled_df = df.style.apply(highlight_breakouts, axis=1)
     
