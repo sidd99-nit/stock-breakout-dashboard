@@ -164,9 +164,13 @@ if not df.empty:
         styled_df,
         use_container_width=True,
         height=750,
+        column_order=[
+            "Company", "Ticker", "Invest ($)", "Live Price", "Daily Change",
+            "20-Day High", "Drop From High %", "Action"
+        ],
         column_config={
-            "Company": st.column_config.TextColumn(width="medium", pinned=True),
-            "Ticker": st.column_config.TextColumn(width="small", pinned=True),
+            "Company": st.column_config.TextColumn(width="medium", pinned=False),
+            "Ticker": st.column_config.TextColumn(width="small", pinned=False),
             "Live Price": st.column_config.NumberColumn(format="$%.2f", width="small"),
             "Daily Change": st.column_config.TextColumn(width="medium"),
             "20-Day High": st.column_config.NumberColumn(format="$%.2f", width="medium"),
