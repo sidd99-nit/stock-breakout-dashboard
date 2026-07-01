@@ -165,8 +165,8 @@ if not df.empty:
         use_container_width=True,
         height=750,
         column_config={
-            "Company": st.column_config.TextColumn(width="medium"),
-            "Ticker": st.column_config.TextColumn(width="small"),
+            "Company": st.column_config.TextColumn(width="medium", pinned=True),
+            "Ticker": st.column_config.TextColumn(width="small", pinned=True),
             "Live Price": st.column_config.NumberColumn(format="$%.2f", width="small"),
             "Daily Change": st.column_config.TextColumn(width="medium"),
             "20-Day High": st.column_config.NumberColumn(format="$%.2f", width="medium"),
