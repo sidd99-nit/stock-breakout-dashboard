@@ -30,24 +30,25 @@ def fetch_stock_data(watchlist):
                 
             # Isolate the trailing 20 trading days (excluding today's live candle for high calculation)
             trailing_20_days = hist.iloc[-21:-1]
-            highest_high_20d = trailing_20_days['High'].max()
+            lowest_low_20d = trailing_20_days['High'].min()
             
             # Get current market price
             current_price = hist['Close'].iloc[-1]
             price_change = current_price - hist['Close'].iloc[-2]
             pct_change = (price_change / hist['Close'].iloc[-2]) * 100
             
-            # Technical condition check
-            crossed_high = current_price >= highest_high_20d
+            # Technical condition inverted for breakdown support check
+            crossed_low = current_price <= lowest_low_20d
+            pct_to_low = ((current_price - lowest_low_20d) / lowest_low_20d) * 100
             
             data_list.append({
                 "Company": company,
                 "Ticker": ticker,
                 "Live Price": round(current_price, 2),
                 "Daily Change": f"{price_change:+.2f} ({pct_change:+.2f}%)",
-                "20-Day High Target": round(highest_high_20d, 2),
-                "Breakout Status": "🚀 BREAKOUT" if crossed_high else "🔒 Below High",
-                "Distance to High": f"{((current_price - highest_high_20d) / highest_high_20d) * 100:.2f}%"
+                "20-Day Low Target": round(lowest_low_20d, 2),
+                "Breakout Status": "🚀 BREAKDOWN" if crossed_low else "🔒 ABOVE FLOOR",
+                "Distance to Low %": round(pct_to_low, 2)
             })
         except Exception as e:
             # Catch errors for missing listings or down network tickers
