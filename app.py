@@ -11,7 +11,7 @@ st.caption("Auto-refreshes to monitor technical breakouts across major global ti
 WATCHLIST = {
     "NVIDIA": "NVDA", "Google": "GOOGL", "Apple": "AAPL", "Microsoft": "MSFT", 
     "Amazon": "AMZN", "Broadcom": "AVGO", "Tesla": "TSLA", "Meta": "META", 
-    "Micron": "MU", "Eli Lilly": "LLY", "Berkshire Hathaway": "BRK-B", 
+    "Micron": "MU", "Eli Lilly": "LLY", "Berkshire Hathaway": "BRK-A", 
     "JPMorgan Chase": "JPM", "AMD": "AMD", "Intel": "INTC", "Netflix": "NFLX", 
     "Visa": "V", "Accenture": "ACN", "SpaceX": "SPCX"
 }
