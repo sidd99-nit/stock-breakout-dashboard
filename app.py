@@ -13,8 +13,8 @@ WATCHLIST = {
     "NVIDIA": "NVDA", "Google": "GOOGL", "Apple": "AAPL", "Microsoft": "MSFT",
     "Amazon": "AMZN", "Broadcom": "AVGO", "Tesla": "TSLA", "Meta": "META",
     "Micron": "MU", "Eli Lilly": "LLY", "Berkshire Hathaway": "BRK-A",
-    "JPMorgan Chase": "JPM", "AMD": "AMD", "Intel": "INTC", "Netflix": "NFLX",
-    "Visa": "V", "Accenture": "ACN", "SpaceX": "SPCX"
+    "JPMorgan Chase": "JPM", "AMD": "AMD", "Intel": "INTC", "Exxon Mobil": "XOM",
+    "Visa": "V", "Walmart": "WMT", "SpaceX": "SPCX", "Mastercard": "MA", "Intel": "INTC", "Johnson & Johnson": "JNJ"
 }
 
 # ---- Configurable budget parameters ----
