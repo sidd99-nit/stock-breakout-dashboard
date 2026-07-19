@@ -6,10 +6,6 @@ import numpy as np
 # Set up page config
 st.set_page_config(page_title="Dip-Buying SIP Dashboard", layout="wide")
 st.title("Yearly-Low AVWAP Staircase Tracker")
-st.caption("Anchors a Volume-Weighted Average Price at each of the last 6 calendar years' lowest price for "
-           "every stock (same anchoring rule as the 'Yearly-Low AVWAPs' TradingView indicator) — every "
-           "additional line a stock's price is currently below bumps its own investment up a step, toward "
-           "its own cap.")
 
 # Define the watchlist mapped to their market tickers
 WATCHLIST = {
@@ -274,39 +270,5 @@ if not raw_df.empty:
                     st.caption("This preview shows this stock's standalone target at each rung. The actual "
                                "amount above may be lower if the budget is being squeezed across several "
                                "deeply-discounted stocks at once (common with a ~20-stock watchlist).")
-
-    st.divider()
-    st.subheader("📌 How the yearly-low AVWAP staircase works")
-    st.markdown(
-        f"""
-        - **Anchors**: for each of the last **{NUM_YEARS} calendar years**, find that year's
-          single lowest price and the first bar that touched it — exactly the anchoring rule
-          used by the "Yearly-Low AVWAPs" indicator. Each anchor gets its own Volume-Weighted
-          Average Price computed from that bar all the way to today.
-        - **Every time price goes below one more line, the stake goes up a step.** We count
-          how many of a stock's {NUM_YEARS} AVWAP lines sit ABOVE today's price — each one
-          means that year's buyers are, on average, still underwater or breakeven.
-        - **Every stock has the same floor (${MIN_ALLOCATION:.0f}) and cap (${MAX_ALLOCATION:.0f})**
-          — the floor is what it gets the moment even ONE line is breached; the cap is reached
-          once price is below ALL {NUM_YEARS} lines. The step size is even: breaching half the
-          lines gets you exactly halfway from floor to cap.
-        - **Budget fit:** if every active stock's target fits within ${TOTAL_BUDGET:.0f}, each
-          gets its own target and any leftover stays unspent. If targets add up to more (common
-          when several of the ~20 watchlist stocks dip at once), every active stock is first
-          guaranteed its ${MIN_ALLOCATION:.0f} floor, then the rest is split in proportion to
-          how many rungs each has climbed past its floor — deeper-breaching stocks still win
-          priority on scarce dollars.
-        - **Avg Discount %** (shown per stock) is informational only — it tells you how deep
-          the breached lines are on average, but doesn't drive the allocation; the step count
-          does.
-        """
-    )
-
-    st.caption(
-        "⚠️ Individual stocks are far more volatile than broad indices, so breaching several "
-        "yearly-low AVWAP lines at once is more common here than for an index. The step size "
-        "is even regardless of how deep a breach is — a 1% breach and a 40% breach of the same "
-        "line count as one rung."
-    )
 else:
     st.error("Unable to load data. Please check your internet connection or try again.")
