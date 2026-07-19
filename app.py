@@ -221,102 +221,92 @@ if not raw_df.empty:
             st.caption(f"ℹ️ {skipped} stock(s) excluded — trading above EVERY one of their yearly-low AVWAP "
                        f"lines, so no rungs breached and no buy signal this run.")
 
-        st.divider()
+    st.divider()
 
-        # Highlight rows by allocation size (relative to this run's max)
-        def highlight_actions(row):
-            frac = row["Invest ($)"] / df["Invest ($)"].max()
-            if frac < 0.34:
-                color = 'background-color: #444444; color: #dddddd'
-            elif frac < 0.67:
-                color = 'background-color: #2e7d32; color: white'
-            else:
-                color = 'background-color: #1b5e20; color: white'
-            return [color for _ in row]
+    # ---------------- Mobile-friendly card layout (replaces the wide table) ----------------
+    st.subheader("This month's buy plan")
 
-        display_df = df[["Company", "Ticker", "Invest ($)", "Live Price", "Daily Change",
-                          "Lines Breached", "Total Lines", "Avg Discount Below Breached Lines %",
-                          "Breached Fraction"]].rename(
-            columns={"Breached Fraction": "Floor→Cap %", "Avg Discount Below Breached Lines %": "Avg Discount %"}
-        )
-        display_df["Floor→Cap %"] = (display_df["Floor→Cap %"] * 100).round(0)
-        styled_df = display_df.style.apply(highlight_actions, axis=1)
+    max_invest = df["Invest ($)"].max() if not df.empty else 0
 
-        st.dataframe(
-            styled_df,
-            use_container_width=True,
-            height=750,
-            column_config={
-                "Company": st.column_config.TextColumn(width="medium", pinned=False),
-                "Ticker": st.column_config.TextColumn(width="small", pinned=False),
-                "Live Price": st.column_config.NumberColumn(format="$%.2f", width="small"),
-                "Daily Change": st.column_config.TextColumn(width="medium"),
-                "Lines Breached": st.column_config.NumberColumn(width="small"),
-                "Total Lines": st.column_config.NumberColumn(width="small"),
-                "Avg Discount %": st.column_config.NumberColumn(format="%.2f%%", width="medium"),
-                "Invest ($)": st.column_config.NumberColumn(format="$%.2f", width="small"),
-                "Floor→Cap %": st.column_config.ProgressColumn(
-                    format="%.0f%%", min_value=0, max_value=100, width="medium"
-                ),
-            }
-        )
+    for _, row in df.iterrows():
+        invest_amt = row["Invest ($)"]
+        frac = invest_amt / max_invest if max_invest > 0 else 0
+        border_color = "#1b5e20" if frac >= 0.67 else ("#2e7d32" if frac >= 0.34 else "#455a64")
 
-        st.divider()
-        st.subheader("🪜 Per-stock staircase & AVWAP details")
-        for _, row in df.iterrows():
-            with st.expander(f"{row['Company']} ({row['Ticker']}) — {row['Lines Breached']}/{row['Total Lines']} "
-                              f"rungs breached, investing ${row['Invest ($)']:.2f}"):
-                anchors = anchor_tables.get(row["Company"], [])
-                if anchors:
+        with st.container(border=True):
+            top_left, top_right = st.columns([3, 2])
+            with top_left:
+                st.markdown(f"**{row['Company']}**  \n`{row['Ticker']}`")
+                st.caption(f"🟢 {row['Lines Breached']}/{row['Total Lines']} yearly-low AVWAP lines breached")
+            with top_right:
+                st.markdown(
+                    f"<div style='text-align:right; font-size:1.4rem; font-weight:700; color:{border_color};'>"
+                    f"${invest_amt:,.2f}</div>",
+                    unsafe_allow_html=True,
+                )
+                st.caption(f"Range: ${MIN_ALLOCATION:.0f} → ${MAX_ALLOCATION:.0f}")
+
+            d1, d2, d3 = st.columns(3)
+            d1.metric("Price", f"${row['Live Price']:,.2f}", row["Daily Change"])
+            d2.metric("Avg Discount", f"{row['Avg Discount Below Breached Lines %']:.1f}%")
+            d3.metric("Floor→Cap", f"{row['Breached Fraction']*100:.0f}%")
+
+            st.progress(row["Breached Fraction"],
+                        text=f"Staircase progress: {row['Lines Breached']}/{row['Total Lines']} rungs "
+                             f"→ ${invest_amt:,.2f}")
+
+            anchors = anchor_tables.get(row["Company"], [])
+            if anchors:
+                with st.expander(f"AVWAP anchor breakdown ({len(anchors)} lines)"):
                     st.dataframe(pd.DataFrame(anchors), use_container_width=True, hide_index=True)
 
-                st.markdown("**Staircase preview** — what this stock would receive at each rung:")
-                total_lines = row["Total Lines"]
-                preview_rows = []
-                for rung in range(0, total_lines + 1):
-                    amt = 0.0 if rung == 0 else MIN_ALLOCATION + (rung / total_lines) * (MAX_ALLOCATION - MIN_ALLOCATION)
-                    preview_rows.append({
-                        "Rungs Breached": f"{rung} / {total_lines}",
-                        "Investment ($)": round(amt, 2),
-                        "This is current level": "👉" if rung == row["Lines Breached"] else "",
-                    })
-                st.dataframe(pd.DataFrame(preview_rows), use_container_width=True, hide_index=True)
-                st.caption("This preview shows this stock's standalone target at each rung. The actual amount "
-                           "above may be lower if the $100 budget is being squeezed across several deeply-"
-                           "discounted stocks at once (common with a ~20-stock watchlist).")
+                    st.markdown("**Staircase preview** — what this stock would receive at each rung:")
+                    total_lines = row["Total Lines"]
+                    preview_rows = []
+                    for rung in range(0, total_lines + 1):
+                        amt = 0.0 if rung == 0 else MIN_ALLOCATION + (rung / total_lines) * (MAX_ALLOCATION - MIN_ALLOCATION)
+                        preview_rows.append({
+                            "Rungs Breached": f"{rung} / {total_lines}",
+                            "Investment ($)": round(amt, 2),
+                            "This is current level": "👉" if rung == row["Lines Breached"] else "",
+                        })
+                    st.dataframe(pd.DataFrame(preview_rows), use_container_width=True, hide_index=True)
+                    st.caption("This preview shows this stock's standalone target at each rung. The actual "
+                               "amount above may be lower if the budget is being squeezed across several "
+                               "deeply-discounted stocks at once (common with a ~20-stock watchlist).")
 
-        st.divider()
-        st.subheader("📌 How the yearly-low AVWAP staircase works")
-        st.markdown(
-            f"""
-            - **Anchors**: for each of the last **{NUM_YEARS} calendar years**, find that year's
-              single lowest price and the first bar that touched it — exactly the anchoring rule
-              used by the "Yearly-Low AVWAPs" indicator. Each anchor gets its own Volume-Weighted
-              Average Price computed from that bar all the way to today.
-            - **Every time price goes below one more line, the stake goes up a step.** We count
-              how many of a stock's {NUM_YEARS} AVWAP lines sit ABOVE today's price — each one
-              means that year's buyers are, on average, still underwater or breakeven.
-            - **Every stock has the same floor (${MIN_ALLOCATION:.0f}) and cap (${MAX_ALLOCATION:.0f})**
-              — the floor is what it gets the moment even ONE line is breached; the cap is reached
-              once price is below ALL {NUM_YEARS} lines. The step size is even: breaching half the
-              lines gets you exactly halfway from floor to cap.
-            - **Budget fit:** if every active stock's target fits within ${TOTAL_BUDGET:.0f}, each
-              gets its own target and any leftover stays unspent. If targets add up to more (common
-              when several of the ~20 watchlist stocks dip at once), every active stock is first
-              guaranteed its ${MIN_ALLOCATION:.0f} floor, then the rest is split in proportion to
-              how many rungs each has climbed past its floor — deeper-breaching stocks still win
-              priority on scarce dollars.
-            - **Avg Discount %** (shown per stock) is informational only — it tells you how deep
-              the breached lines are on average, but doesn't drive the allocation; the step count
-              does.
-            """
-        )
+    st.divider()
+    st.subheader("📌 How the yearly-low AVWAP staircase works")
+    st.markdown(
+        f"""
+        - **Anchors**: for each of the last **{NUM_YEARS} calendar years**, find that year's
+          single lowest price and the first bar that touched it — exactly the anchoring rule
+          used by the "Yearly-Low AVWAPs" indicator. Each anchor gets its own Volume-Weighted
+          Average Price computed from that bar all the way to today.
+        - **Every time price goes below one more line, the stake goes up a step.** We count
+          how many of a stock's {NUM_YEARS} AVWAP lines sit ABOVE today's price — each one
+          means that year's buyers are, on average, still underwater or breakeven.
+        - **Every stock has the same floor (${MIN_ALLOCATION:.0f}) and cap (${MAX_ALLOCATION:.0f})**
+          — the floor is what it gets the moment even ONE line is breached; the cap is reached
+          once price is below ALL {NUM_YEARS} lines. The step size is even: breaching half the
+          lines gets you exactly halfway from floor to cap.
+        - **Budget fit:** if every active stock's target fits within ${TOTAL_BUDGET:.0f}, each
+          gets its own target and any leftover stays unspent. If targets add up to more (common
+          when several of the ~20 watchlist stocks dip at once), every active stock is first
+          guaranteed its ${MIN_ALLOCATION:.0f} floor, then the rest is split in proportion to
+          how many rungs each has climbed past its floor — deeper-breaching stocks still win
+          priority on scarce dollars.
+        - **Avg Discount %** (shown per stock) is informational only — it tells you how deep
+          the breached lines are on average, but doesn't drive the allocation; the step count
+          does.
+        """
+    )
 
-        st.caption(
-            "⚠️ Individual stocks are far more volatile than broad indices, so breaching several "
-            "yearly-low AVWAP lines at once is more common here than for an index. The step size "
-            "is even regardless of how deep a breach is — a 1% breach and a 40% breach of the same "
-            "line count as one rung."
-        )
+    st.caption(
+        "⚠️ Individual stocks are far more volatile than broad indices, so breaching several "
+        "yearly-low AVWAP lines at once is more common here than for an index. The step size "
+        "is even regardless of how deep a breach is — a 1% breach and a 40% breach of the same "
+        "line count as one rung."
+    )
 else:
     st.error("Unable to load data. Please check your internet connection or try again.")
